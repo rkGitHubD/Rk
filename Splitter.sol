@@ -10,6 +10,7 @@ contract Splitter {
 	address public	owner;
 	address public bob ;
 	address public carol ;
+	event logSplit(address sender, uint value, uint bob, uint carol);
 
     function Splitter(address receiver1,address receiver2){
 		owner = msg.sender;
@@ -18,13 +19,14 @@ contract Splitter {
 	}
 
 	function splitEth () payable returns(bool sufficient) {
-			
+		 	
 		if(owner != msg.sender) return false;
-		if (balances[msg.sender] < msg.value) return false;
+		//if (balances[msg.sender] < msg.value) return false;
 		uint split =msg.value/2;
 		balances[msg.sender] -= msg.value;
 		balances[bob] += split;
 		balances[carol] =msg.value - split;
+		logSplit(msg.sender,msg.value,balances[bob],balances[carol]);
 		return true;
 	}
 
