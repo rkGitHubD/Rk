@@ -1,23 +1,25 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.8;
 	// Small project number 2 - Remittance 
 	
 contract Remittance{
 	address public owner;// Alice is owner who deploys this Contract
 	uint public limit;
 	uint public amount;
-	bytes32 hashPass = keccak256("ABC" , "123");
+	bytes32 hashPass ;
 	uint public comms;
 	address public intermed;
 	
 	event fundsSent(address from, address to, uint howmuch);
 	event fundsReclaimed (address who, uint howmuch);	
 
-	function Remittance()
-		payable
+	function Remittance(bytes32 pwd1,bytes32 pwd2)
+	    payable
+	    public
 		{
 			limit = 10;
 			owner = msg.sender;
 			amount = msg.value;
+			hashPass = keccak256(keccak256(pwd1) & keccak256(pwd2));
 		}
 
 	function isStillgoing() public constant returns(bool)
@@ -34,14 +36,19 @@ contract Remittance{
 		payable
 		returns (bool success) 
 		{
-			if(owner != msg.sender) throw;
-			if (msg.sender == receiver) throw;
-			if (msg.value ==0) throw;
-			if (!isStillgoing()) throw;
+			//if(owner != msg.sender) throw;
+			//if (msg.sender == receiver) throw;
+			//if (msg.value ==0) throw;
+			//if (!isStillgoing()) throw;
+			require(owner ==msg.sender);
+			require(msg.sender != receiver);
+			require(msg.value >=0);
+			require(!isStillgoing());
 			intermed = msg.sender;
 			bytes32 bothpasswords;
-			bothpasswords = keccak256(recrPass, InterPass);
-			if (bothpasswords != hashPass) throw;
+			bothpasswords = keccak256(keccak256(recrPass) &keccak256(InterPass));
+			//if (bothpasswords != hashPass) throw;
+			require(bothpasswords == hashPass);
 			amount = msg.value;
 			comms = amount/10; 
 			intermed.transfer(comms);
@@ -65,10 +72,11 @@ contract Remittance{
 		    }
 	       }
 	    }
-	function killSwitch() public 
+	function killSwitch() 
+	    private
 	{
 		if(owner ==msg.sender) {
-		    suicide(owner);
+		    selfdestruct(owner);
 		}
     }
 }
